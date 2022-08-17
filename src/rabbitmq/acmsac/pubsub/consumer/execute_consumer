@@ -1,0 +1,50 @@
+#docker run -d --hostname my-rabbit --name some-rabbit -p 8080:15672 rabbitmq:3-management
+
+#source ~/.cshrc
+export GO111MODULE=off
+export GOPATH=$GOPATH:/Volumes/GoogleDrive/Meu\ Drive/go/adaptive
+cd /Volumes/GoogleDrive/Meu\ Drive/go/adaptive/src/rabbitmq/acmsac/pubsub/consumer
+#clear
+
+#echo "1)Remember to start rabbimq-server with 'brew services start rabbitmq'"
+#echo "OR Stop 'brew services stop rabbitmq"
+#echo "2)Remeber that PC=0 is infinite buffer"
+#echo
+
+echo "Compiling main.go"
+go build main.go
+
+#echo "Server started..."
+
+# Training
+./main -is-adaptive=false -monitor-interval=1 -prefetch-count=0 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0
+
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.0179 -ki=0.0 -kd=0.0
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.166577703 -ki=0.158808685 -kd=0.036932252
+
+#P Controller [1-22]
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=0 -controller-type="PID" -set-point=600 -kp=0.021147 -ki=0.0 -kd=0.0
+
+#PI Controller [1-22] Paper
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=0 -controller-type="PID" -set-point=400 -kp=-0.0016 -ki=0.0060 -kd=0.0
+
+#PI controller [1-22] ACM SAC
+#./main -is-adaptive=true -monitor-interval=1 -prefetch-count=0 -controller-type="PID" -set-point=4000 -kp=-0.0016 -ki=0.0060 -kd=0.0
+
+# Ki * 2.0 (in relation to paper)
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=0 -controller-type="PID" -set-point=400 -kp=-0.0016 -ki=0.0060 -kd=0.0
+
+###### PD Controller [1-22] ACM SAC
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=0 -controller-type="PID" -set-point=500 -kp=0.09 -ki=0.0 -kd=0.09
+
+###### PID [1-22] Paper
+#./main -is-adaptive=true -monitor-interval=1 -prefetch-count=0 -controller-type="PID" -set-point=600 -kp=0.0017761 -ki=0.0058096 -kd=0.0018417
+
+###### PID [1-22] ACM SAC
+#./main -is-adaptive=true -monitor-interval=10 -prefetch-count=0 -controller-type="PID" -set-point=500 -kp=0.0017761 -ki=0.0058096 -kd=0.0018417
+
+###### OnOff
+#./main -is-adaptive=true -monitor-interval=30 -prefetch-count=1 -controller-type="OnOff" -set-point=200 -kp=0.0 -ki=0.0 -kd=0.0
+
+###### OnOffDeadZone
+#./main -is-adaptive=true -monitor-interval=5 -prefetch-count=1 -controller-type="OnOffDeadZone" -set-point=400 -kp=0.0 -ki=0.0 -kd=0.0

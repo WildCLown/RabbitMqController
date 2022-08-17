@@ -1,0 +1,37 @@
+#docker run -d --hostname my-rabbit --name some-rabbit -p 8080:15672 rabbitmq:3-management
+
+source ~/.cshrc
+export GO111MODULE=off
+export GOPATH=$GOPATH:/Volumes/GoogleDrive/Meu Drive/go/adaptive
+cd /Volumes/GoogleDrive/Meu\ Drive/go/adaptive/src/rabbitmq/modified/img/server/main
+clear
+
+echo "1)Remember to start rabbimq-server with 'brew services start rabbitmq'"
+echo "OR Stop 'brew services stop rabbitmq"
+echo "2)Remeber that PC=0 is infinite buffer"
+echo
+
+if [ "$#" -ne 6 ]; then
+   echo "ERROR: Number of input parameters is incorrect!!"
+   echo "********** Remember to Configure PARAMETERS ***************"
+   echo "-is-adaptive,-controller-type,-prefetch-count-initial,-monitor-interval (s),-set-point,-kp"
+   echo "******************************************************"
+   exit
+fi
+
+#echo " Example: execute -is-adaptive=true -controller-type=P -prefetch-count-initial=0 -monitor-interval=10000 -set-point=1600 -kp=1600"
+#sleep 3s
+
+echo "Compiling main.go"
+go build main.go
+
+isAdaptive=$1
+controllerType=$2
+PC=$3
+monitorInterval=$4
+setPoint=$5
+kp=$6
+
+echo $isAdaptive $controllerType $PC $monitorInterval $setPoint $kp
+
+./main $isAdaptive $controllerType $PC $monitorInterval $setPoint $kp
