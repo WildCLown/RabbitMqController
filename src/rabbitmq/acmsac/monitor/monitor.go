@@ -22,6 +22,7 @@ func (m Monitor) Monitoring(chStart, chStop chan bool) {
 	for {
 		chStart <- true
 		time.Sleep(m.MonitorInterval) // seconds
+		//ime.Sleep(50 * time.Millisecond) // seconds
 		chStop <- true
 	}
 }

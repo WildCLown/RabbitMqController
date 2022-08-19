@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"os"
+	"rabbitmq/acmsac/controller/errorsquare"
 	"rabbitmq/acmsac/controller/onoff"
 	"rabbitmq/acmsac/controller/onoffDeadZone"
 	"rabbitmq/acmsac/controller/pid"
@@ -38,6 +39,16 @@ func NewController(typeName string, p ...float64) IController {
 		limMin := shared.PC_DEFAULT_LIMIT_MIN
 		limMax := shared.PC_DEFAULT_LIMIT_MAX
 		c := pid.PIDController{}
+		c.Initialise(r, kp, ki, kd, float64(limMin), float64(limMax))
+		return &c
+	case "ErrorSquare":
+		r := p[0]
+		kp := p[1]
+		ki := p[2]
+		kd := p[3]
+		limMin := shared.PC_DEFAULT_LIMIT_MIN
+		limMax := shared.PC_DEFAULT_LIMIT_MAX
+		c := errorsquare.ErrorSquare{}
 		c.Initialise(r, kp, ki, kd, float64(limMin), float64(limMax))
 		return &c
 	default:

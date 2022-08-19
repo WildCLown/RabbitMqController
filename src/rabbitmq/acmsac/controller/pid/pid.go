@@ -46,11 +46,11 @@ func (c *PIDController) Update(p ...float64) float64 {
 	proportional := c.Info.Kp * err // pcontroller[k] = kp * e[k]
 
 	// Integrator (David page 49)
-	c.Info.Integrator += 1.0 * err // TODO
+	c.Info.Integrator += 1.0 * err // TODO change 1.0 -> interval between actions
 	integrator := c.Info.Integrator * c.Info.Ki
 
 	// Differentiator (David page 49)
-	differentiator := c.Info.Kd * (err - c.Info.PreviousError) / 1.0 // TODO
+	differentiator := c.Info.Kd * (err - c.Info.PreviousError) / 1.0 // TODO change 1.0 -> interval between actions
 
 	// pid output
 	c.Info.Out = proportional + integrator + differentiator
