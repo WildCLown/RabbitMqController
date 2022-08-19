@@ -98,6 +98,12 @@ func (s Server) Run() {
 	//s.handleRequestsZieglerNicholsTraining()
 }
 
+type StoreData struct {
+	PC          int
+	Messages    int
+	ArrivalRate float64
+}
+
 // Handle requests
 func (s Server) handleRequests() {
 
@@ -106,7 +112,7 @@ func (s Server) handleRequests() {
 	count := 0       // count received messages
 	countSample := 0 // for experimental purpose
 	t1 := time.Time{}
-
+	records := []StoreData{}
 	for {
 		select {
 		case d := <-s.Msgs: // receive a message
@@ -129,13 +135,19 @@ func (s Server) handleRequests() {
 			shared.FailOnError(err1, "Failed to inspect the queue")
 
 			// log information
+			// FON
 			fmt.Printf("%d;%d;%.3f \n", s.PC, q1.Messages, s.ArrivalRate)
 
 			// Non-adaptive
 			if !s.IsAdaptive { // for experimental purpose
-				if countSample < 300 {
+				if countSample < 5 {
+					records = append(records, StoreData{s.PC, q1.Messages, s.ArrivalRate})
 					countSample++
 				} else {
+					if s.PC == 5 {
+						writeFile()
+						os.Exit(3)
+					}
 					s.PC = s.PC + 1
 					countSample = 0
 
@@ -326,7 +338,6 @@ func Monitor(duration int, sampleSize int) {
 		// GC Stats
 		m.PauseTotalNs = rtm.PauseTotalNs
 		m.NumGC = rtm.NumGC
-
 		fmt.Println(m.Alloc, ";", m.TotalAlloc, ";", m.Sys, ";", m.Mallocs, ";", m.Frees, ";", m.LiveObjects, ";", m.PauseTotalNs, ";", m.NumGC, ";", m.NumGoroutine)
 
 		count++
@@ -335,3 +346,7 @@ func Monitor(duration int, sampleSize int) {
 		}
 	}
 } // TODO
+
+func writeFile() {
+	fmt.Println("Socorro")
+}

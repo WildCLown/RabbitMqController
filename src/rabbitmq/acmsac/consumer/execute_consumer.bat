@@ -17,8 +17,8 @@ go build main.go
 
 echo Server started...
 
-@REM  Training
-@REM go run main.go -is-adaptive=false -monitor-interval=30 -prefetch-count=1 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0
+@REM  Training || Change interval to 20
+go run main.go -is-adaptive=false -monitor-interval=5 -prefetch-count=1 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0
 
 @REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.0179 -ki=0.0 -kd=0.0
 @REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.166577703 -ki=0.158808685 -kd=0.036932252
@@ -28,7 +28,7 @@ echo Server started...
 
 @REM PI Controller [1-22] VEM
 @REM echo [ PI Controller - Analytical ]
-go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=400 -kp=-0.0016 -ki=0.0060 -kd=0.0
+@REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=400 -kp=-0.0016 -ki=0.0060 -kd=0.0
 
 @REM  PI - Error Square
 @REM echo [ PI Error Square - Analytical ]
