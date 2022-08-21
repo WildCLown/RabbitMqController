@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	_ "net/http/pprof"
@@ -11,6 +13,7 @@ import (
 	"rabbitmq/acmsac/monitor"
 	"rabbitmq/shared"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -98,12 +101,6 @@ func (s Server) Run() {
 	//s.handleRequestsZieglerNicholsTraining()
 }
 
-type StoreData struct {
-	PC          int
-	Messages    int
-	ArrivalRate float64
-}
-
 // Handle requests
 func (s Server) handleRequests() {
 
@@ -112,7 +109,17 @@ func (s Server) handleRequests() {
 	count := 0       // count received messages
 	countSample := 0 // for experimental purpose
 	t1 := time.Time{}
-	records := []StoreData{}
+	csvFile := &os.File{}
+	err := error(nil)
+	csv_writer := csv.NewWriter(nil)
+	if !s.IsAdaptive { //Create file if not addaptative
+		currentTime := time.Now()
+		csvFile, err = os.Create("./csvs/training-" + currentTime.Format("02-01-2006") + ".csv")
+		if err != nil {
+			log.Fatalf("failed creating file: %s", err)
+		}
+		csv_writer = csv.NewWriter(csvFile)
+	}
 	for {
 		select {
 		case d := <-s.Msgs: // receive a message
@@ -136,17 +143,19 @@ func (s Server) handleRequests() {
 
 			// log information
 			// FON
-			fmt.Printf("%d;%d;%.3f \n", s.PC, q1.Messages, s.ArrivalRate)
-
+			formatedArrival := fmt.Sprintf("%.3f", s.ArrivalRate)
+			fmt.Printf("%d;%d;%s \n", s.PC, q1.Messages, formatedArrival)
+			csv_writer.Write([]string{strconv.Itoa(s.PC), strconv.Itoa(q1.Messages), formatedArrival})
 			// Non-adaptive
 			if !s.IsAdaptive { // for experimental purpose
-				if countSample < 5 {
-					records = append(records, StoreData{s.PC, q1.Messages, s.ArrivalRate})
+				if countSample <= 300 {
 					countSample++
 				} else {
-					if s.PC == 5 {
-						writeFile()
-						os.Exit(3)
+					csv_writer.Flush()
+					if err := csv_writer.Error(); err != nil {
+						log.Fatal(err) // write file.csv: bad file descriptor
+					} else {
+						fmt.Println("Flushed into csv")
 					}
 					s.PC = s.PC + 1
 					countSample = 0
@@ -346,7 +355,3 @@ func Monitor(duration int, sampleSize int) {
 		}
 	}
 } // TODO
-
-func writeFile() {
-	fmt.Println("Socorro")
-}
