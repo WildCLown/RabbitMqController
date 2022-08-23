@@ -114,7 +114,7 @@ func (s Server) handleRequests() {
 	csv_writer := csv.NewWriter(nil)
 	if !s.IsAdaptive { //Create file if not addaptative
 		currentTime := time.Now()
-		csvFile, err = os.Create("./csvs/training-" + currentTime.Format("02-01-2006") + ".csv")
+		csvFile, err = os.Create("../sheets/training-" + currentTime.Format("02-01-2006") + ".csv")
 		if err != nil {
 			log.Fatalf("failed creating file: %s", err)
 		}
