@@ -19,6 +19,11 @@ import (
 	"github.com/streadway/amqp"
 )
 
+var kpPtr = flag.Float64("kp", 1.0, "Kp is a float")
+var kiPtr = flag.Float64("ki", 1.0, "Ki is a float")
+var kdPtr = flag.Float64("kd", 1.0, "Kd is a float")
+var samples = 5 - 1 // Minus due to count starting from 0
+
 type Server struct {
 	IsAdaptive      bool
 	MonitorInterval time.Duration
@@ -32,6 +37,7 @@ type Server struct {
 	Ctler           controller.IController
 	ArrivalRate     float64
 	PC              int
+	csvPrinter      bool
 }
 
 func main() {
@@ -41,10 +47,8 @@ func main() {
 	var controllerTypePtr = flag.String("controller-type", "OnOff", "controller-type is a string")
 	var monitorIntervalPtr = flag.Int("monitor-interval", 1, "monitor-interval is an int (s)")
 	var setPointPtr = flag.Float64("set-point", 3000.0, "set-point is a float (goal rate)")
-	var kpPtr = flag.Float64("kp", 1.0, "Kp is a float")
-	var kiPtr = flag.Float64("ki", 1.0, "Ki is a float")
-	var kdPtr = flag.Float64("kd", 1.0, "Kd is a float")
 	var prefetchCountPtr = flag.Int("prefetch-count", 1, "prefetch-count is an int")
+	var csvPrinter = flag.Bool("csv-printer", false, "csv-printer is a bool")
 	flag.Parse()
 
 	// create controller
@@ -52,7 +56,7 @@ func main() {
 	c = controller.NewController(*controllerTypePtr, *setPointPtr, *kpPtr, *kiPtr, *kdPtr)
 
 	// create new consumer
-	var server = NewServer(*isAdaptivePtr, *monitorIntervalPtr, c, *prefetchCountPtr)
+	var server = NewServer(*isAdaptivePtr, *monitorIntervalPtr, c, *prefetchCountPtr, *csvPrinter)
 
 	fmt.Println("Consumer started [", *isAdaptivePtr, *controllerTypePtr, "Kp=", *kpPtr, "Ki=", *kiPtr, "Kd=", *kdPtr, "Goal=", *setPointPtr, "Monitor Interval=", *monitorIntervalPtr, "PC=", *prefetchCountPtr, "]")
 
@@ -60,7 +64,7 @@ func main() {
 	server.Run()
 }
 
-func NewServer(isAdaptive bool, monitorInterval int, c controller.IController, prefetchCount int) Server {
+func NewServer(isAdaptive bool, monitorInterval int, c controller.IController, prefetchCount int, csvPrinter bool) Server {
 	s := Server{}
 
 	// Configure consumer
@@ -79,7 +83,7 @@ func NewServer(isAdaptive bool, monitorInterval int, c controller.IController, p
 
 	// set initial PC -- always 1
 	s.PC = prefetchCount
-
+	s.csvPrinter = csvPrinter
 	return s
 }
 
@@ -112,9 +116,12 @@ func (s Server) handleRequests() {
 	csvFile := &os.File{}
 	err := error(nil)
 	csv_writer := csv.NewWriter(nil)
-	if !s.IsAdaptive { //Create file if not addaptative
+	if s.csvPrinter { //Create file if not addaptative
 		currentTime := time.Now()
-		csvFile, err = os.Create("../sheets/training-" + currentTime.Format("02-01-2006") + ".csv")
+		kpStr := fmt.Sprintf("%.4f", *kpPtr)
+		kdStr := fmt.Sprintf("%.4f", *kdPtr)
+		kiStr := fmt.Sprintf("%.4f", *kiPtr)
+		csvFile, err = os.Create("../sheets/training-" + currentTime.Format("02-01-2006") + "-kp-" + kpStr + "-kd-" + kdStr + "-ki-" + kiStr + ".csv")
 		if err != nil {
 			log.Fatalf("failed creating file: %s", err)
 		}
@@ -125,7 +132,7 @@ func (s Server) handleRequests() {
 		case d := <-s.Msgs: // receive a message
 			// ack message as soon as it arrives
 			//time.Sleep(1 * time.Millisecond) // TODO
-			time.Sleep(250 * time.Microsecond) // TODO
+			// time.Sleep(250 * time.Microsecond) // TODO
 			d.Ack(false)
 			count++ // increment number of received messages
 		case <-s.ChStart: // start timer
@@ -145,20 +152,32 @@ func (s Server) handleRequests() {
 			// FON
 			formatedArrival := fmt.Sprintf("%.3f", s.ArrivalRate)
 			fmt.Printf("%d;%d;%s \n", s.PC, q1.Messages, formatedArrival)
-			csv_writer.Write([]string{strconv.Itoa(s.PC), strconv.Itoa(q1.Messages), formatedArrival})
-			// Non-adaptive
-			if !s.IsAdaptive { // for experimental purpose
-				if countSample <= 300 {
-					countSample++
-				} else {
+			if q1.Messages == 0 && s.ArrivalRate == 0 && s.PC == 1 {
+				fmt.Println("Not yet started")
+			} else if s.csvPrinter {
+				csv_writer.Write([]string{strconv.Itoa(s.PC), strconv.Itoa(q1.Messages), formatedArrival})
+
+				if countSample%samples == 0 && countSample != 0 {
 					csv_writer.Flush()
 					if err := csv_writer.Error(); err != nil {
 						log.Fatal(err) // write file.csv: bad file descriptor
 					} else {
 						fmt.Println("Flushed into csv")
 					}
+				}
+			}
+			if q1.Messages < int(s.ArrivalRate) {
+				fmt.Println("Stopped for 10 min")
+				time.Sleep(10 * time.Minute)
+			}
+			if countSample < samples {
+				if s.ArrivalRate != 0 {
+					countSample++
+				}
+			} else {
+				countSample = 0
+				if !s.IsAdaptive {
 					s.PC = s.PC + 1
-					countSample = 0
 
 					// set qos
 					err := s.Ch.Qos(
@@ -168,7 +187,8 @@ func (s Server) handleRequests() {
 					)
 					shared.FailOnError(err, "Failed to set QoS")
 				}
-			} else { // adaptive
+			}
+			if s.IsAdaptive { // adaptive
 
 				// compute new value of control input using a given controller
 				u = int(math.Round(controller.Update(s.Ctler, s.ArrivalRate)))
@@ -203,7 +223,7 @@ func (s *Server) handleRequestsZieglerNicholsTraining() {
 		case d := <-s.Msgs: // receive a message
 			// ack message as soon as it arrives
 			//time.Sleep(1 * time.Millisecond) // TODO
-			time.Sleep(250 * time.Microsecond) // TODO
+			// time.Sleep(250 * time.Microsecond) // TODO
 			d.Ack(false)
 			count++ // increment number of received messages
 		case <-s.ChStart: // start timer
