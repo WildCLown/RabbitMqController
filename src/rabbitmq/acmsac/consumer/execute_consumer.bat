@@ -17,8 +17,23 @@ go build main.go
 
 echo Server started...
 
-@REM  Training || Change interval to 20
-go run main.go -is-adaptive=false -monitor-interval=5 -prefetch-count=1 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0
+@REM  Training || Change interval to 10
+@REM go run main.go -is-adaptive=false -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0 -csv-printer=true
+
+@REM 'Root Locus'
+@REM PI
+@REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1400.0 -kp=-0.0003 -ki=0.0025 -kd=0.0 -csv-printer=true -label="RL-PI"
+
+@REM PID
+go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1400.0 -kp=0.0010903 -ki=0.0024250 -kd=0.0007687 -csv-printer=true -label="RL-PID"
+
+@REM Ziegler-Nichols
+@REM PI
+@REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1400.0 -kp=0.001192 -ki=0.00003 -kd=0.0 -csv-printer=true -label="ZN-PI"
+@REM PID
+@REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1400.0 -kp=0.001589 -ki=0.00002 -kd=0.000005 -csv-printer=true -label="ZN-PID"
+
+
 
 @REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.0179 -ki=0.0 -kd=0.0
 @REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.166577703 -ki=0.158808685 -kd=0.036932252
