@@ -18,7 +18,7 @@ go build main.go
 echo Server started...
 
 @REM  Training || Change interval to 20
-go run main.go -is-adaptive=false -monitor-interval=20 -prefetch-count=1 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0
+go run main.go -is-adaptive=false -monitor-interval=5 -prefetch-count=1 -controller-type="PID" -set-point=0 -kp=0.0 -ki=0.0 -kd=0.0
 
 @REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.0179 -ki=0.0 -kd=0.0
 @REM go run main.go -is-adaptive=true -monitor-interval=10 -prefetch-count=1 -controller-type="PID" -set-point=1000 -kp=0.166577703 -ki=0.158808685 -kd=0.036932252

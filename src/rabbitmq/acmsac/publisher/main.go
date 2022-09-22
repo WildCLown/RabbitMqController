@@ -216,7 +216,8 @@ func (c *Client) configureRabbitMQ() {
 	err := error(nil)
 
 	// c.Conn, err = amqp.Dial("amqp://guest:guest@192.168.0.7:5672/") // Home 192
-	c.Conn, err = amqp.Dial("amqp://guest:guest@127.0.0.1:5672/") // Home 127
+	// c.Conn, err = amqp.Dial("amqp://guest:guest@127.0.0.1:5672/") // Home 127
+	c.Conn, err = amqp.Dial("amqp://guest:guest@192.168.1.158:5672/") // Home 127
 	//c.Conn, err = amqp.Dial("amqp://guest:guest@172.22.38.75:5672/") // Ufpe
 	shared.FailOnError(err, "Failed to connect to RabbitMQ")
 

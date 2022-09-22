@@ -124,8 +124,6 @@ func (s Server) handleRequests() {
 		select {
 		case d := <-s.Msgs: // receive a message
 			// ack message as soon as it arrives
-			//time.Sleep(1 * time.Millisecond) // TODO
-			time.Sleep(250 * time.Microsecond) // TODO
 			d.Ack(false)
 			count++ // increment number of received messages
 		case <-s.ChStart: // start timer
@@ -148,7 +146,7 @@ func (s Server) handleRequests() {
 			csv_writer.Write([]string{strconv.Itoa(s.PC), strconv.Itoa(q1.Messages), formatedArrival})
 			// Non-adaptive
 			if !s.IsAdaptive { // for experimental purpose
-				if countSample <= 300 {
+				if countSample <= 10 {
 					countSample++
 				} else {
 					csv_writer.Flush()
