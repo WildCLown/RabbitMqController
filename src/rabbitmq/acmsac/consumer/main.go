@@ -22,7 +22,8 @@ import (
 var kpPtr = flag.Float64("kp", 1.0, "Kp is a float")
 var kiPtr = flag.Float64("ki", 1.0, "Ki is a float")
 var kdPtr = flag.Float64("kd", 1.0, "Kd is a float")
-var samples = 5 - 1 // Minus due to count starting from 0
+var csvLabel = flag.String("label", "training", "Label is a String")
+var samples = 100 - 1 // Minus due to count starting from 0
 
 type Server struct {
 	IsAdaptive      bool
@@ -121,7 +122,7 @@ func (s Server) handleRequests() {
 		kpStr := fmt.Sprintf("%.4f", *kpPtr)
 		kdStr := fmt.Sprintf("%.4f", *kdPtr)
 		kiStr := fmt.Sprintf("%.4f", *kiPtr)
-		csvFile, err = os.Create("../sheets/training-" + currentTime.Format("02-01-2006") + "-kp-" + kpStr + "-kd-" + kdStr + "-ki-" + kiStr + ".csv")
+		csvFile, err = os.Create("../sheets/" + *csvLabel + "-" + currentTime.Format("02-01-2006") + "-kp-" + kpStr + "-kd-" + kdStr + "-ki-" + kiStr + ".csv")
 		if err != nil {
 			log.Fatalf("failed creating file: %s", err)
 		}
